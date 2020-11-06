@@ -349,8 +349,8 @@ type ServerVolume struct {
 func (v *ServerVolume) UnmarshalJSON(b []byte) error {
 	type temp struct {
 		ServerID    int    `json:"ServerID"`
-		TotalSizeLo uint32 `json:"TotalSizeLo"`
-		TotalSizeHi uint32 `json:"TotalSizeHi"`
+		TotalSizeLo int64 `json:"TotalSizeLo"`
+		TotalSizeHi int64 `json:"TotalSizeHi"`
 	}
 
 	values := temp{}
@@ -359,7 +359,16 @@ func (v *ServerVolume) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+  // nzbget can return negatives :|
+  if values.TotalSizeLo < 0 {
+    values.TotalSizeLo *= -1
+  }
+
+  if values.TotalSizeHi < 0 {
+    values.TotalSizeHi *= -1
+  }
+
 	v.ID = values.ServerID
-	v.TotalBytes = joinInt64(values.TotalSizeLo, values.TotalSizeHi)
+	v.TotalBytes = values.TotalSizeHi + values.TotalSizeLo
 	return nil
 }
